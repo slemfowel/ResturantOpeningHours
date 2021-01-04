@@ -1,6 +1,6 @@
 # ResturantOpeningHours
 
-although the json object works well but it could be better by making it much simpler 
+# although the json object works well but it could be better by making it much simpler 
 
  "thursday": [
  {
@@ -12,10 +12,10 @@ although the json object works well but it could be better by making it much sim
  
  personally i think this should be in the format above. as this will save excution time and also server resources. 
 
-#this project was done using c# 
-#Design Patterns: Mediator 
+# this project was done using c# 
+# Design Patterns: Mediator 
 
-#the following packages should be updated. 
+# the following packages should be updated. 
 
 #  <ItemGroup>
     <PackageReference Include="MediatR" Version="9.0.0" />
@@ -25,4 +25,4 @@ although the json object works well but it could be better by making it much sim
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.6.3" />
   </ItemGroup>
 
-  #please remember to run a dotnet restore on this solution. 
+  # please remember to run a dotnet restore on this solution. 
