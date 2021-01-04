@@ -13,6 +13,10 @@ namespace ResturantOpenningHours.API.Logic
         /// </summary>  
         public static string UnixTimeStampToShortTimeString(double unixTimeStamp)
         {
+            if (unixTimeStamp == 0)
+            {
+                return "(*)";
+            }
             System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Local);
             dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
             return dtDateTime.ToShortTimeString();
@@ -20,7 +24,7 @@ namespace ResturantOpenningHours.API.Logic
 
         public OpenningAndClosingHoursResponse Converter(OpenningAndClosingHoursReqest list)
         {
-            
+
             return new OpenningAndClosingHoursResponse
             {
                 Sunday = string.Format("Sunday: {0}", PrintTime(TimeSorteer(list.Sunday))),
@@ -32,20 +36,54 @@ namespace ResturantOpenningHours.API.Logic
                 Saturday = string.Format("Saturday: {0}", PrintTime(TimeSorteer(list.Saturday))),
 
             };
-           
-           
+
+
         }
 
-       
 
-        public List<Time> TimeSorteer (List<OpenHourModel> openHourModel)
+
+        public List<Time> TimeSorteer(List<OpenHourModel> openHourModel)
         {
             var times = new List<Time>();
             if (openHourModel == null) return times;
 
             //var hours = openHourModel.OrderBy(x => x.value);
+            var allitems = openHourModel.OrderBy(x => x.Value).ToList();
             var openhours = openHourModel.OrderBy(x => x.Type).Where(x => x.Type.ToLower() == "open").ToList();
             var closehours = openHourModel.OrderBy(x => x.Type).Where(x => x.Type.ToLower() == "close").ToList();
+
+            //if ((openhours.Count > closehours.Count))
+            //{
+            //    var time = new Time
+            //    {
+            //        OpenTime = openhours.LastOrDefault().Value,
+            //        CloseTime = 0
+            //    };
+            //    times.Add(time);
+
+            //}
+            if (allitems.Count < 1)
+            {
+                return times;
+            }
+            if (allitems.LastOrDefault().Type.ToLower() == "open")
+            {
+                var time = new Time
+                {
+                    OpenTime = allitems.LastOrDefault().Value,
+                    CloseTime = 0
+                };
+                times.Add(time);
+            }
+            if (allitems.FirstOrDefault().Type.ToLower() == "close")
+            {
+                var time = new Time
+                {
+                    OpenTime =0,
+                    CloseTime = allitems.FirstOrDefault().Value
+                };
+                times.Add(time);
+            }
             
             if(openhours.Count >= 1 && closehours.Count >= 1)
             {
@@ -69,11 +107,13 @@ namespace ResturantOpenningHours.API.Logic
                             break;
                             // openhours.Remove(openitemhour);
                         }
+                        
                        
                     }
                 }
 
             }
+            
             return times;
         }
    

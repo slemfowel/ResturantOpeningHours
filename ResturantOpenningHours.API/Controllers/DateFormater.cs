@@ -28,7 +28,7 @@ namespace ResturantOpenningHours.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(200)]
         [Produces("application/json")]
-        [HttpGet, Route("GetOpenHours")]
+        [HttpPost, Route("GetOpenHours")]
         /// <summary>  
         /// This action enables users to format Unix time into UTC date time and returns the open hours for the business provided 
         /// </summary>  
