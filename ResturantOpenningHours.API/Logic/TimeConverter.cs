@@ -13,10 +13,10 @@ namespace ResturantOpenningHours.API.Logic
         /// </summary>  
         public static string UnixTimeStampToShortTimeString(double unixTimeStamp)
         {
-            if (unixTimeStamp == 0)
-            {
-                return "(*)";
-            }
+            //if (unixTimeStamp == 0)
+            //{
+            //    return "(*)";
+            //}
             System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Local);
             dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
             return dtDateTime.ToShortTimeString();
@@ -27,13 +27,13 @@ namespace ResturantOpenningHours.API.Logic
 
             return new OpenningAndClosingHoursResponse
             {
-                Sunday = string.Format("Sunday: {0}", PrintTime(TimeSorteer(list.Sunday))),
-                Monday = string.Format("Monday: {0}", PrintTime(TimeSorteer(list.Monday))),
-                Tuesday = string.Format("Tuesday: {0}", PrintTime(TimeSorteer(list.Tuesday))),
-                Wednesday = string.Format("Wednesday: {0}", PrintTime(TimeSorteer(list.Wednesday))),
-                Thursday = string.Format("Thursday: {0}", PrintTime(TimeSorteer(list.Thursday))),
-                Friday = string.Format("Friday: {0}", PrintTime(TimeSorteer(list.Friday))),
-                Saturday = string.Format("Saturday: {0}", PrintTime(TimeSorteer(list.Saturday))),
+                Sunday = string.Format("Sunday: {0}", PrintTime(TimeSorteer(list.Sunday,list.Saturday,list.Monday,"Saturday","Monday"))),
+                Monday = string.Format("Monday: {0}", PrintTime(TimeSorteer(list.Monday, list.Sunday, list.Tuesday, "Sunday","Tuesday"))),
+                Tuesday = string.Format("Tuesday: {0}", PrintTime(TimeSorteer(list.Tuesday, list.Monday, list.Wednesday, "Monday", "Wednesday"))),
+                Wednesday = string.Format("Wednesday: {0}", PrintTime(TimeSorteer(list.Wednesday, list.Tuesday,list.Thursday, "Tuesday", "Thursday"))),
+                Thursday = string.Format("Thursday: {0}", PrintTime(TimeSorteer(list.Thursday, list.Wednesday, list.Friday,"Wednesday","Friday"))),
+                Friday = string.Format("Friday: {0}", PrintTime(TimeSorteer(list.Friday,list.Thursday,list.Saturday,"Thursday","Saturday"))),
+                Saturday = string.Format("Saturday: {0}", PrintTime(TimeSorteer(list.Saturday,list.Friday,list.Sunday,"Friday","Sunday"))),
 
             };
 
@@ -42,7 +42,7 @@ namespace ResturantOpenningHours.API.Logic
 
 
 
-        public List<Time> TimeSorteer(List<OpenHourModel> openHourModel)
+        public List<Time> TimeSorteer(List<OpenHourModel> openHourModel, List<OpenHourModel> previousDay, List<OpenHourModel> nextDay, string previousDayAsWord, string nextDayAsWord)
         {
             var times = new List<Time>();
             if (openHourModel == null) return times;
@@ -51,6 +51,8 @@ namespace ResturantOpenningHours.API.Logic
             var allitems = openHourModel.OrderBy(x => x.Value).ToList();
             var openhours = openHourModel.OrderBy(x => x.Type).Where(x => x.Type.ToLower() == "open").ToList();
             var closehours = openHourModel.OrderBy(x => x.Type).Where(x => x.Type.ToLower() == "close").ToList();
+            nextDay = nextDay.OrderBy(x => x.Value).ToList();
+            previousDay = previousDay.OrderBy(x => x.Value).ToList();
 
             //if ((openhours.Count > closehours.Count))
             //{
@@ -66,21 +68,21 @@ namespace ResturantOpenningHours.API.Logic
             {
                 return times;
             }
-            if (allitems.LastOrDefault().Type.ToLower() == "open")
+            if (allitems.LastOrDefault().Type.ToLower() == "open" && (nextDay.Count > 0 && nextDay.FirstOrDefault().Type.ToLower() == "close"))
             {
                 var time = new Time
                 {
-                    OpenTime = allitems.LastOrDefault().Value,
-                    CloseTime = 0
+                    OpenTime = UnixTimeStampToShortTimeString(allitems.LastOrDefault().Value),
+                    CloseTime = string.Format("{0} {1}",nextDayAsWord , UnixTimeStampToShortTimeString(nextDay.FirstOrDefault().Value))
                 };
                 times.Add(time);
             }
-            if (allitems.FirstOrDefault().Type.ToLower() == "close")
+            if (allitems.FirstOrDefault().Type.ToLower() == "close" && (previousDay.Count > 0 && previousDay.LastOrDefault().Type.ToLower() == "open"))
             {
                 var time = new Time
                 {
-                    OpenTime =0,
-                    CloseTime = allitems.FirstOrDefault().Value
+                    OpenTime = string.Format("{0} {1}", previousDayAsWord  ,  UnixTimeStampToShortTimeString(previousDay.FirstOrDefault().Value)),
+                    CloseTime = UnixTimeStampToShortTimeString(allitems.FirstOrDefault().Value)
                 };
                 times.Add(time);
             }
@@ -97,8 +99,8 @@ namespace ResturantOpenningHours.API.Logic
                         {
                             var time = new Time
                             {
-                                OpenTime = openitemhour.Value,
-                                CloseTime = closeitemhour.Value
+                                OpenTime = UnixTimeStampToShortTimeString(openitemhour.Value),
+                                CloseTime = UnixTimeStampToShortTimeString(closeitemhour.Value)
                             };
                             times.Add(time);
 
@@ -121,13 +123,13 @@ namespace ResturantOpenningHours.API.Logic
         {
             
             if (timer == null || timer.Count < 1) return "Closed";
-            if (timer.Count == 1) return string.Format("{0} - {1}", UnixTimeStampToShortTimeString(timer.First().OpenTime), UnixTimeStampToShortTimeString(timer.First().CloseTime));
+            if (timer.Count == 1) return string.Format("{0} - {1}", timer.First().OpenTime, timer.First().CloseTime);
             else
             {
                 var value = "";
                 foreach (var item in timer)
                 {
-                  value =  string.Format("{0} - {1},", UnixTimeStampToShortTimeString(item.OpenTime), UnixTimeStampToShortTimeString(item.CloseTime));
+                  value =  string.Format("{0} - {1},", item.OpenTime, item.CloseTime);
                 }
                 return value;
                
@@ -137,7 +139,7 @@ namespace ResturantOpenningHours.API.Logic
 
     public class Time
     {
-        public int OpenTime { get; set; }
-        public int CloseTime { get; set; }
+        public string OpenTime { get; set; }
+        public string CloseTime { get; set; }
     }
 }
