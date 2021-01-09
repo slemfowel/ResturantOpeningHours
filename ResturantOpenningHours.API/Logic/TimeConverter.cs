@@ -51,8 +51,16 @@ namespace ResturantOpenningHours.API.Logic
             var allitems = openHourModel.OrderBy(x => x.Value).ToList();
             var openhours = openHourModel.OrderBy(x => x.Type).Where(x => x.Type.ToLower() == "open").ToList();
             var closehours = openHourModel.OrderBy(x => x.Type).Where(x => x.Type.ToLower() == "close").ToList();
-            nextDay = nextDay.OrderBy(x => x.Value).ToList();
-            previousDay = previousDay.OrderBy(x => x.Value).ToList();
+            if ((nextDay != null) && (nextDay.Any()))
+            {
+                nextDay = nextDay.OrderBy(x => x.Value).ToList();
+            }
+
+            if ((previousDay != null) && (previousDay.Any()))
+            {
+                previousDay = previousDay.OrderBy(x => x.Value).ToList();
+            }
+           
 
             //if ((openhours.Count > closehours.Count))
             //{
@@ -68,23 +76,30 @@ namespace ResturantOpenningHours.API.Logic
             {
                 return times;
             }
-            if (allitems.LastOrDefault().Type.ToLower() == "open" && (nextDay.Count > 0 && nextDay.FirstOrDefault().Type.ToLower() == "close"))
+            if ((nextDay != null) && (nextDay.Any()))
             {
-                var time = new Time
+                if (allitems.LastOrDefault().Type.ToLower() == "open" && (nextDay.Count > 0 && nextDay.FirstOrDefault().Type.ToLower() == "close"))
                 {
-                    OpenTime = UnixTimeStampToShortTimeString(allitems.LastOrDefault().Value),
-                    CloseTime = string.Format("{0} {1}",nextDayAsWord , UnixTimeStampToShortTimeString(nextDay.FirstOrDefault().Value))
-                };
-                times.Add(time);
+                    var time = new Time
+                    {
+                        OpenTime = UnixTimeStampToShortTimeString(allitems.LastOrDefault().Value),
+                        CloseTime = string.Format("{0} {1}", nextDayAsWord, UnixTimeStampToShortTimeString(nextDay.FirstOrDefault().Value))
+                    };
+                    times.Add(time);
+                }
             }
-            if (allitems.FirstOrDefault().Type.ToLower() == "close" && (previousDay.Count > 0 && previousDay.LastOrDefault().Type.ToLower() == "open"))
+
+            if ((previousDay != null) && (previousDay.Any()))
             {
-                var time = new Time
+                if (allitems.FirstOrDefault().Type.ToLower() == "close" && (previousDay.Count > 0 && previousDay.LastOrDefault().Type.ToLower() == "open"))
                 {
-                    OpenTime = string.Format("{0} {1}", previousDayAsWord  ,  UnixTimeStampToShortTimeString(previousDay.FirstOrDefault().Value)),
-                    CloseTime = UnixTimeStampToShortTimeString(allitems.FirstOrDefault().Value)
-                };
-                times.Add(time);
+                    var time = new Time
+                    {
+                        OpenTime = string.Format("{0} {1}", previousDayAsWord, UnixTimeStampToShortTimeString(previousDay.FirstOrDefault().Value)),
+                        CloseTime = UnixTimeStampToShortTimeString(allitems.FirstOrDefault().Value)
+                    };
+                    times.Add(time);
+                }
             }
             
             if(openhours.Count >= 1 && closehours.Count >= 1)
